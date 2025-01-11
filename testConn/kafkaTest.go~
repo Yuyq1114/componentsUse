@@ -1,0 +1,136 @@
+package testConn
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+)
+
+// 生产者
+func produce() {
+	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "localhost:9092"})
+	if err != nil {
+		log.Fatalf("无法创建生产者: %v", err)
+	}
+	defer p.Close()
+
+	topic := "myTopic"
+
+	// 监听生产者的交付报告
+	go func() {
+		for e := range p.Events() {
+			switch ev := e.(type) {
+			case *kafka.Message:
+				if ev.TopicPartition.Error != nil {
+					fmt.Printf("交付失败: %v\n", ev.TopicPartition)
+				} else {
+					fmt.Printf("成功交付到 %v\n", ev.TopicPartition)
+				}
+			}
+		}
+	}()
+
+	// 发送消息
+	for i := 0; i < 10; i++ {
+		value := fmt.Sprintf("消息 %d", i)
+		p.Produce(&kafka.Message{
+			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+			Value:          []byte(value),
+		}, nil)
+
+		// 确保消息被交付
+		p.Flush(15 * 1000)
+		time.Sleep(time.Second)
+	}
+}
+
+// 消费者
+func consume() {
+	c, err := kafka.NewConsumer(&kafka.ConfigMap{
+		"bootstrap.servers": "localhost:9092",
+		"group.id":          "myGroup",
+		"auto.offset.reset": "earliest",
+	})
+	if err != nil {
+		log.Fatalf("无法创建消费者: %v", err)
+	}
+	defer c.Close()
+
+	err = c.SubscribeTopics([]string{"myTopic"}, nil)
+	if err != nil {
+		log.Fatalf("无法订阅主题: %v", err)
+	}
+
+	run := true
+	for run {
+		select {
+		case sig := <-signalChan():
+			fmt.Printf("捕获到信号 %v, 退出...\n", sig)
+			run = false
+		default:
+			ev := c.Poll(100)
+			switch e := ev.(type) {
+			case *kafka.Message:
+				fmt.Printf("消费消息: %s: %s\n", e.TopicPartition, string(e.Value))
+			case kafka.Error:
+				fmt.Fprintf(os.Stderr, "错误: %v\n", e)
+				run = false
+			}
+		}
+	}
+}
+
+// 主题管理
+func manageTopics() {
+	adminClient, err := kafka.NewAdminClient(&kafka.ConfigMap{"bootstrap.servers": "localhost:9092"})
+	if err != nil {
+		log.Fatalf("无法创建管理员客户端: %v", err)
+	}
+	defer adminClient.Close()
+
+	// 创建主题
+	topic := kafka.TopicSpecification{
+		Topic:             "myTopic",
+		NumPartitions:     1,
+		ReplicationFactor: 1,
+	}
+	results, err := adminClient.CreateTopics(context.TODO(), []kafka.TopicSpecification{topic})
+	if err != nil {
+		log.Fatalf("创建主题失败: %v", err)
+	}
+	for _, result := range results {
+		fmt.Printf("创建主题 %s 结果: %v\n", result.Topic, result.Error)
+	}
+
+	// 列出主题
+	metadata, err := adminClient.GetMetadata(nil, true, 5000)
+	if err != nil {
+		log.Fatalf("获取元数据失败: %v", err)
+	}
+	for _, t := range metadata.Topics {
+		fmt.Printf("主题: %s, 分区: %d\n", t.Topic, len(t.Partitions))
+	}
+
+	// 删除主题
+	results, err = adminClient.DeleteTopics(context.TODO(), []string{"myTopic"})
+	if err != nil {
+		log.Fatalf("删除主题失败: %v", err)
+	}
+	for _, result := range results {
+		fmt.Printf("删除主题 %s 结果: %v\n", result.Topic, result.Error)
+	}
+}
+
+
+// 捕获系统信号
+func signalChan() chan os.Signal {
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	return sigChan
+}

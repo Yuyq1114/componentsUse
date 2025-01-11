@@ -1,0 +1,9 @@
+package cmd
+
+type Arg struct {
+	ConfigMap string
+}
+
+func Entrance(arg Arg) (err error) {
+	return  nil
+}
