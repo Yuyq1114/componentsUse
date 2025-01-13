@@ -18,9 +18,13 @@ type PgConfig struct {
 	DataSource string `mapstructure:"dataSource"`
 }
 
+type DorisConfig struct {
+	DataSource string `mapstructure:"dataSource"`
+}
 type Config struct {
 	Redis RedisConfig `mapstructure:"redis"`
 	Pg    PgConfig    `mapstructure:"PG"`
+	Doris DorisConfig `mapstructure:"Doris"`
 }
 
 func InitConfig(configPath string) (config Config, err error) {

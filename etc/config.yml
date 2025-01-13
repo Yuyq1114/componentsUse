@@ -13,11 +13,7 @@ redis:
   writeTimeout:   10s
 
 PG:
-  dataSource: "host=localhost user=postgres password=password dbname=mydb port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+  dataSource: "host=120.46.80.186 user=myuser password=mypassword dbname=mydatabase port=5432 sslmode=disable TimeZone=Asia/Shanghai"
 
 Doris:
-  Host:""
-  Port:""
-  User:""
-  Pass:""
-  DB:""
+  dataSource: "root:mypassword@tcp(120.46.80.186:9031)/mydb?charset=utf8mb4&parseTime=True&loc=Local"
