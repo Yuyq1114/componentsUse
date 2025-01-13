@@ -1,13 +1,19 @@
-Redis:
-  Host:""
-  Pass:""
+redis:
+  address:
+    - "120.46.80.186:7001"
+    - "120.46.80.186:7002"
+    - "120.46.80.186:7003"
+    - "120.46.80.186:7004"
+    - "120.46.80.186:7005"
+    - "120.46.80.186:7006"
+  password: "mypassword"
+  routeByLatency: "true"
+  dialTimeout:    10s
+  readTimeout:    10s
+  writeTimeout:   10s
 
 PG:
-  Host:""
-  Port:""
-  User:""
-  Pass:""
-  DB:""
+  dataSource: "host=localhost user=postgres password=password dbname=mydb port=5432 sslmode=disable TimeZone=Asia/Shanghai"
 
 Doris:
   Host:""

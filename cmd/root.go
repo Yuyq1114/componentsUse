@@ -6,6 +6,10 @@ import (
 	"log"
 )
 
+const (
+	CONFIGPATH = "D:\\ProgramFile\\go\\test_component\\etc\\config.yml"
+)
+
 var rootCmd = &cobra.Command{
 	Use:   "start",
 	Short: "CLI for in-toto",
@@ -13,6 +17,9 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		fmt.Println("test my app")
+		Entrance(Arg{
+			ConfigMap: CONFIGPATH,
+		})
 	},
 }
 
@@ -36,4 +43,8 @@ func Execute() {
 	rootCmd.Execute()
 	log.Println("start execute program")
 
+}
+
+func init() {
+	rootCmd.AddCommand(helloCmd)
 }
