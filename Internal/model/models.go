@@ -113,6 +113,11 @@ func InitDoris(config settings.DorisConfig) (db *gorm.DB, err error) {
 	//PROPERTIES (
 	//	"replication_num" = "1"
 	//);
+	err = db.AutoMigrate(&UserDoris{})
+	if err != nil {
+		log.Fatalf("自动迁移失败: %v", err)
+	}
+	fmt.Println("模型自动迁移完成")
 
 	user := User{Name: "Tony", Age: 24}
 	result := db.Create(&user)

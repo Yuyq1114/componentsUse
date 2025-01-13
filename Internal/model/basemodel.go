@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 type User struct {
 	ID        uint   `gorm:"primaryKey"`
@@ -16,4 +18,16 @@ type Order struct {
 	Product   string
 	Price     float64
 	CreatedAt time.Time
+}
+
+// User 结构体
+// User 结构体
+// User 结构体
+// User 结构体
+type UserDoris struct {
+	ID        uint   `gorm:"primaryKey"`
+	Name      string `gorm:"size:255"`
+	Age       int
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
