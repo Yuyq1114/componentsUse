@@ -21,10 +21,25 @@ type PgConfig struct {
 type DorisConfig struct {
 	DataSource string `mapstructure:"dataSource"`
 }
+
+type KafkaConfig struct {
+	Protocol string `mapstructure:"protocol"`
+	Addr     string `mapstructure:"Addr"`
+}
+type NacosConfig struct {
+	ServerAddr  string `mapstructure:"serverAddr"`
+	ServerPort  uint64 `mapstructure:"serverPort"`
+	NamespaceId string `mapstructure:"namespaceId"`
+	Username    string `mapstructure:"username"`
+	Password    string `mapstructure:"password"`
+}
+
 type Config struct {
 	Redis RedisConfig `mapstructure:"redis"`
 	Pg    PgConfig    `mapstructure:"PG"`
 	Doris DorisConfig `mapstructure:"Doris"`
+	Kafka KafkaConfig `mapstructure:"Kafka"`
+	Nacos NacosConfig `mapstructure:"nacos"`
 }
 
 func InitConfig(configPath string) (config Config, err error) {

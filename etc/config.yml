@@ -17,3 +17,15 @@ PG:
 
 Doris:
   dataSource: "root:mypassword@tcp(120.46.80.186:9031)/mydb?charset=utf8mb4&parseTime=True&loc=Local"
+
+Kafka:
+  Addr: 120.46.80.186:9092
+  protocol: tcp
+
+nacos:
+  serverAddr: 120.46.80.186
+  serverPort: 8848
+  clientNameId: namespaceid
+  username: myuser
+  password: mypassword
+  
