@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/bytedance/sonic"
 	"test_component/Internal/engine/task1"
 	"test_component/Internal/model"
 	"test_component/Internal/settings"
@@ -73,15 +74,11 @@ func runTask(config *settings.Config) {
 			ErrorCode: 404,
 			ErrorMsg:  "Not Found",
 		},
-		{
-			Timestamp: time.Now(),
-			Type:      2,
-			ErrorCode: 500,
-			ErrorMsg:  "Internal Server Error",
-		},
 	}
 
-	err = model.StreamInsertData(exampleData)
+	jsonData, err := sonic.Marshal(exampleData)
+	fmt.Println(string(jsonData))
+	err = model.StreamInsertData(&jsonData)
 	if err != nil {
 		fmt.Println("数据插入失败")
 	} else {

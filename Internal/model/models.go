@@ -185,7 +185,7 @@ func KafkaConsumeIns(topic string, conf settings.KafkaConfig) *kafka.Reader {
 		Partition: 0,
 		MaxBytes:  10e6, // 10MB
 	})
-	r.SetOffset(42)
+	//r.SetOffset(42)
 	fmt.Println("初始化kafka消费者成功")
 	return r
 	//for {

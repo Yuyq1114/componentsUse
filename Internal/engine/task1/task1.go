@@ -1,17 +1,13 @@
 package task1
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients/naming_client"
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 	"gorm.io/gorm"
 	"log"
-	"net/http"
-	"test_component/Internal/model"
 	"time"
 )
 
@@ -50,10 +46,10 @@ func (task1 *Task1) ProduceTestMessage(ctx context.Context) error {
 			return nil
 		default:
 			time.Sleep(3 * time.Second)
-			value, _ := time.Now().MarshalBinary()
+			value := time.Now().String()
 			err := task1.Kw.WriteMessages(task1.Ctx, kafka.Message{
 				Key:   []byte("key"),
-				Value: value,
+				Value: []byte(value),
 			})
 			if err != nil {
 				return err
@@ -88,7 +84,8 @@ func (task1 *Task1) Start() {
 	fmt.Println(task1.TestString)
 }
 
-func (task1 *Task1) NacosMission() {
+//nacos的服务调用，微服务架构中类似注册gin.Get(
+/*func (task1 *Task1) NacosMission() {
 	model.RegisterService(task1.NamingClient, "add", "test_component", "117.50.85.130", 8848)
 
 	port, u := model.GetIPAndPort(task1.NamingClient, "add", "test_component")
@@ -111,3 +108,4 @@ func (task1 *Task1) NacosMission() {
 		log.Println("调用失败")
 	}
 }
+*/
