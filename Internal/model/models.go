@@ -16,21 +16,35 @@ import (
 	"test_component/Internal/settings"
 )
 
-func InitRedis(config settings.RedisConfig) (rdb *redis.ClusterClient, err error) {
+func InitRedis(config settings.RedisConfig) (rdb *redis.Client, err error) {
 
-	fmt.Println(config.Addrs) //
+	//fmt.Println(config.Addrs) //
 	//fmt.Println(reflect.TypeOf(config.Addrs)) //[]string
 	//addrs := strings.Split(config.Addrs, ",")
 	//fmt.Println(addrs)
-	rdb = redis.NewClusterClient(
-		&redis.ClusterOptions{
-			Addrs:          config.Addrs,
-			Password:       config.Password,
-			RouteByLatency: config.RouteByLatency,
-			DialTimeout:    config.DialTimeout,
-			ReadTimeout:    config.ReadTimeout,
-			WriteTimeout:   config.WriteTimeout,
-		})
+	//rdb = redis.NewClusterClient(
+	//	&redis.ClusterOptions{
+	//		Addrs:          config.Addrs,
+	//		Password:       config.Password,
+	//		RouteByLatency: config.RouteByLatency,
+	//		DialTimeout:    config.DialTimeout,
+	//		ReadTimeout:    config.ReadTimeout,
+	//		WriteTimeout:   config.WriteTimeout,
+	//	})
+	//_, err = rdb.Ping(context.Background()).Result()
+	//if err != nil {
+	//	fmt.Println("获取rdb错误")
+	//	log.Println(err)
+	//}
+	//--------------------------------------------------------------------
+	rdb = redis.NewClient(&redis.Options{
+		Addr:         config.Addrs,    // Redis 服务器地址
+		Password:     config.Password, // 没有密码，则
+		DB:           0,               // 默认数据库
+		DialTimeout:  config.DialTimeout,
+		ReadTimeout:  config.ReadTimeout,
+		WriteTimeout: config.WriteTimeout,
+	})
 	_, err = rdb.Ping(context.Background()).Result()
 	if err != nil {
 		fmt.Println("获取rdb错误")

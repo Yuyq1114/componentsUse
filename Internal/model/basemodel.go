@@ -22,14 +22,6 @@ type Order struct {
 	CreatedAt time.Time
 }
 
-type UserDoris struct {
-	ID        uint   `gorm:"primaryKey"`
-	Name      string `gorm:"size:255"`
-	Age       int
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
-
 // TableName 使用grom创建表时会自动的创建某个表的名字，这个可以自定义表名
 func (u *User) TableName() string {
 	return "users"

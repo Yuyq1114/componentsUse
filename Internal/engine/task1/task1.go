@@ -1,34 +1,38 @@
 package task1
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients/naming_client"
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 	"gorm.io/gorm"
 	"log"
+	"net/http"
+	"test_component/Internal/model"
 	"time"
 )
 
 type Task1 struct {
-	Ctx        context.Context
-	TestString string
-	Rdb        *redis.ClusterClient
-	Pg         *gorm.DB
-	//DorisDb    *gorm.DB
+	Ctx          context.Context
+	TestString   string
+	Rdb          *redis.Client
+	Pg           *gorm.DB
+	DorisDb      *gorm.DB
 	Kw           *kafka.Writer
 	Kr           *kafka.Reader
 	NamingClient naming_client.INamingClient
 }
 
-func New(ctx context.Context, rdb *redis.ClusterClient, pg *gorm.DB, kafkawrite *kafka.Writer, kafkaReader *kafka.Reader, naminfClient naming_client.INamingClient) (*Task1, error) {
+func New(ctx context.Context, rdb *redis.Client, pg *gorm.DB, dorisDb *gorm.DB, kafkawrite *kafka.Writer, kafkaReader *kafka.Reader, naminfClient naming_client.INamingClient) (*Task1, error) {
 	task1 := &Task1{
-		Ctx:        ctx,
-		TestString: "hello，this is the task1 start",
-		Rdb:        rdb,
-		Pg:         pg,
-		//DorisDb:    dorisDb,
+		Ctx:          ctx,
+		TestString:   "hello，this is the task1 start",
+		Rdb:          rdb,
+		Pg:           pg,
+		DorisDb:      dorisDb,
 		Kw:           kafkawrite,
 		Kr:           kafkaReader,
 		NamingClient: naminfClient,
@@ -68,8 +72,9 @@ func (task1 *Task1) Start() {
 		case <-task1.Ctx.Done():
 			log.Println("task1的消息consume协程结束")
 		default:
-			m, err := task1.Kr.ReadMessage(task1.Ctx)
 			fmt.Println("start consume")
+			m, err := task1.Kr.ReadMessage(task1.Ctx)
+
 			if err != nil {
 				log.Fatal(err)
 			} else {
@@ -81,4 +86,28 @@ func (task1 *Task1) Start() {
 	}
 
 	fmt.Println(task1.TestString)
+}
+
+func (task1 *Task1) NacosMission() {
+	model.RegisterService(task1.NamingClient, "add", "test_component", "117.50.85.130", 8848)
+
+	port, u := model.GetIPAndPort(task1.NamingClient, "add", "test_component")
+
+	serviceURL := fmt.Sprintf("http://%s:%d", port, u)
+
+	data := map[string]string{
+		"num1": "1",
+		"num2": "2",
+	}
+	jsonData, err := json.Marshal(data)
+
+	resp, err := http.Post(serviceURL, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		log.Fatal(err)
+	}
+	if resp.StatusCode == 200 {
+		log.Println("调用成功")
+	} else {
+		log.Println("调用失败")
+	}
 }

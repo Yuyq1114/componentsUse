@@ -33,15 +33,62 @@ func runTask(config *settings.Config) {
 
 	//如redis
 	//fmt.Println(config.Redis)
-	redisDB, _ := model.InitRedis(config.Redis)
+	redisDB, err := model.InitRedis(config.Redis)
+	if err != nil {
+		fmt.Println("初始化redis失败")
+	} else {
+		fmt.Println("初始化redis成功")
+	}
 	defer redisDB.Close()
 	//初始化pg
-	fmt.Println("pg的初始化配置信息为", config.Pg)
-	pg, _ := model.InitPostgres(config.Pg)
-
+	//fmt.Println("pg的初始化配置信息为", config.Pg)
+	pg, err := model.InitPostgres(config.Pg)
+	if err != nil {
+		fmt.Println("初始化pg失败")
+	} else {
+		fmt.Println("初始化pg成功")
+	}
 	//初始化Doris,内存不够，暂不使用
-	//dorisDb, _ := model.InitDoris(config.Doris)
+	dorisDb, err := model.InitDoris(config.Doris)
+	if err != nil {
+		fmt.Println("初始化doris失败")
+	} else {
+		fmt.Println("初始化doris成功")
+	}
+	//--------------------------------------------------------------
+	//example := model.ExampleTbl{
+	//	Timestamp: time.Now(),
+	//	Type:      1,
+	//	ErrorCode: 404,
+	//	ErrorMsg:  "Not Found",
+	//}
+	//example.InsertData(dorisDb)
+	//
+	//fmt.Println(" 插入完成")
+	//-------------------------------------------------------------
+	exampleData := []model.ExampleTbl{
+		{
+			Timestamp: time.Now(),
+			Type:      1,
+			ErrorCode: 404,
+			ErrorMsg:  "Not Found",
+		},
+		{
+			Timestamp: time.Now(),
+			Type:      2,
+			ErrorCode: 500,
+			ErrorMsg:  "Internal Server Error",
+		},
+	}
 
+	err = model.StreamInsertData(exampleData)
+	if err != nil {
+		fmt.Println("数据插入失败")
+	} else {
+		fmt.Println("数据插入成功")
+	}
+	fmt.Println("任务开始")
+	//------------------------------------------------------------------
 	//初始化kafka
 	procureTask1 := model.KafkaProcureIns("task1", config.Kafka)
 	defer procureTask1.Close()
@@ -57,7 +104,7 @@ func runTask(config *settings.Config) {
 	//启动一些必要的协程
 
 	//wg.Add(1)
-	tak, _ := task1.New(ctx, redisDB, pg, procureTask1, consumeTask1, namingClient)
+	tak, _ := task1.New(ctx, redisDB, pg, dorisDb, procureTask1, consumeTask1, namingClient)
 
 	go func() error {
 		return tak.ProduceTestMessage(ctx)

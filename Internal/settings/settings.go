@@ -7,7 +7,7 @@ import (
 )
 
 type RedisConfig struct {
-	Addrs          []string      `mapstructure:"address"`
+	Addrs          string        `mapstructure:"address"`
 	Password       string        `mapstructure:"password"`
 	RouteByLatency bool          `mapstructure:"routeByLatency"`
 	DialTimeout    time.Duration `mapstructure:"ddialTimeout"` // 设置连接超时时间
