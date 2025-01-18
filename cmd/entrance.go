@@ -104,6 +104,10 @@ func runTask(config *settings.Config) {
 	//wg.Add(1)
 	tak, _ := task1.New(ctx, redisDB, pg, dorisDb, procureTask1, consumeTask1, namingClient)
 
+	//任务间的通信channel再次初始化
+
+	//任务需要的协程在次初始化
+
 	go func() error {
 		return tak.ProduceTestMessage(ctx)
 	}()
