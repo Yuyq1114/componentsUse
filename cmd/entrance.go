@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/bytedance/sonic"
 	"test_component/Internal/engine/task1"
 	"test_component/Internal/model"
 	"test_component/Internal/settings"
@@ -67,7 +66,9 @@ func runTask(config *settings.Config) {
 	//
 	//fmt.Println(" 插入完成")
 	//-------------------------------------------------------------
-	exampleData := []model.ExampleTbl{
+	//用于测试doris的数据
+	//******************* 注意必须是这样的，应为可以有两个[]中阔号
+	/*exampleData := []model.ExampleTbl{
 		{
 			Timestamp: time.Now(),
 			Type:      1,
@@ -78,13 +79,13 @@ func runTask(config *settings.Config) {
 
 	jsonData, err := sonic.Marshal(exampleData)
 	fmt.Println(string(jsonData))
-	err = model.StreamInsertData(&jsonData)
+	err = model.StreamInsertData(&jsonData, config.Doris, "example_tbl")
 	if err != nil {
 		fmt.Println("数据插入失败")
 	} else {
 		fmt.Println("数据插入成功")
 	}
-	fmt.Println("任务开始")
+	fmt.Println("任务开始")*/
 	//------------------------------------------------------------------
 	//初始化kafka
 	procureTask1 := model.KafkaProcureIns("task1", config.Kafka)

@@ -1,11 +1,19 @@
+#redis:
+#  address:
+#    - "120.46.80.186:7001"
+#    - "120.46.80.186:7002"
+#    - "120.46.80.186:7003"
+#    - "120.46.80.186:7004"
+#    - "120.46.80.186:7005"
+#    - "120.46.80.186:7006"
+#  password: "mypassword"
+#  routeByLatency: "true"
+#  dialTimeout:    10s
+#  readTimeout:    10s
+#  writeTimeout:   10s
+
 redis:
-  address:
-    - "120.46.80.186:7001"
-    - "120.46.80.186:7002"
-    - "120.46.80.186:7003"
-    - "120.46.80.186:7004"
-    - "120.46.80.186:7005"
-    - "120.46.80.186:7006"
+  address: 117.50.85.130:6379
   password: "mypassword"
   routeByLatency: "true"
   dialTimeout:    10s
@@ -13,17 +21,20 @@ redis:
   writeTimeout:   10s
 
 PG:
-  dataSource: "host=120.46.80.186 user=myuser password=mypassword dbname=mydatabase port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+  dataSource: "host=117.50.85.130 user=myuser password=mypassword dbname=mydatabase port=5432 sslmode=disable TimeZone=Asia/Shanghai"
 
 Doris:
-  dataSource: "root:mypassword@tcp(120.46.80.186:9031)/mydb?charset=utf8mb4&parseTime=True&loc=Local"
+  dataSource: "root:mypassword@tcp(117.50.85.130:9030)/mydb?charset=utf8mb4&parseTime=True&loc=Local"
+  FEIP: "117.50.85.130"
+  FEPORT: "8040"
+  FEDB: "mydb"
 
 Kafka:
-  Addr: 120.46.80.186:9092
+  Addr: 117.50.85.130:9092
   protocol: tcp
 
 nacos:
-  serverAddr: 120.46.80.186
+  serverAddr: 117.50.85.130
   serverPort: 8848
   clientNameId: namespaceid
   username: myuser

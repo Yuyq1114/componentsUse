@@ -20,6 +20,9 @@ type PgConfig struct {
 
 type DorisConfig struct {
 	DataSource string `mapstructure:"dataSource"`
+	FEIP       string `mapstructure:"FEIP"`
+	FEPORT     string `mapstructure:"FEPORT"`
+	FEDB       string `mapstructure:"FEDB"`
 }
 
 type KafkaConfig struct {

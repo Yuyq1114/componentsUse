@@ -3,20 +3,25 @@ package model
 import (
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"fmt"
+	"github.com/bytedance/sonic"
 	"github.com/nacos-group/nacos-sdk-go/v2/inner/uuid"
 	"gorm.io/gorm"
+	"io"
 	"log"
 	"net/http"
+	"test_component/Internal/settings"
 	"time"
 )
 
 // User 定义 user 表的结构
+// ************此处的json对应解析的json的key名称，千万注意大小写*****************
 type ExampleTbl struct {
-	Timestamp time.Time `gorm:"column:timestamp;not null"` // 日期
-	Type      int       `gorm:"column:type;not null"`      // 类型 (TINYINT)
-	ErrorCode int       `gorm:"column:error_code"`         // 错误代码 (INT)
-	ErrorMsg  string    `gorm:"column:error_msg;size:300"` // 错误消息 (VARCHAR)
+	Timestamp time.Time `json:"timestamp"`
+	Type      int       `json:"type"`
+	ErrorCode int       `json:"error_code"`
+	ErrorMsg  string    `json:"error_msg"`
 }
 
 // TableName 指定表名
@@ -64,20 +69,21 @@ func (u *ExampleTbl) InsertData(db *gorm.DB) error {
 	return db.Create(u).Error
 }
 
-func StreamInsertData(exampleData *[]byte) error {
+func StreamInsertData(exampleData *[]byte, dorisConfig settings.DorisConfig, table string) error {
 
 	// 将结构体数据序列化为 JSON
 
 	//jsonData1 := bytes.NewReader(jsonData)
-	// 构建 HTTP 请求
-	url := "http://117.50.85.130:8040/api/mydb/example_tbl/_stream_load"
+	// 构建 HTTP 请求，注意端口
+	url := fmt.Sprintf("http://%s:%s/api/%s/%s/_stream_load", dorisConfig.FEIP, dorisConfig.FEPORT, dorisConfig.FEDB, table)
+	//url := "http://117.50.85.130:8040/api/mydb/example_tbl/_stream_load"
 	dataOut := bytes.NewReader(*exampleData)
 	req, err := http.NewRequest("PUT", url, dataOut)
 	if err != nil {
 		log.Fatalf("创建请求失败: %v", err)
 	}
 	root := "root"
-	pass := "password"
+	pass := "mypassword"
 	auth := base64.StdEncoding.EncodeToString([]byte(root + ":" + pass))
 	// 设置请求头
 	req.Header.Add("Authorization", "Basic "+auth)
@@ -85,7 +91,7 @@ func StreamInsertData(exampleData *[]byte) error {
 	var u1 = uuid.Must(uuid.NewV4())
 	req.Header.Add("label", u1.String())
 	req.Header.Add("format", "json")
-	req.Header.Add("strip_outer_array", "true") // 可选，设置请求超时（毫秒）
+	req.Header.Add("strip_outer_array", "TRUE") // 可选，设置请求超时（毫秒）
 
 	// 发送请求
 	client := &http.Client{}
@@ -95,11 +101,18 @@ func StreamInsertData(exampleData *[]byte) error {
 	}
 	defer resp.Body.Close()
 
-	// 处理响应
-	if resp.StatusCode == http.StatusOK {
-		fmt.Println("数据插入成功！")
-	} else {
-		fmt.Printf("请求失败，状态码: %d\n", resp.StatusCode)
+	all, err := io.ReadAll(resp.Body)
+	var result map[string]interface{}
+	err = sonic.Unmarshal(all, &result)
+	if err != nil {
+		log.Println(err)
 	}
-	return err
+	fmt.Println(result)
+
+	//处理响应
+	if result["Status"] == "Success" {
+		return nil
+	} else {
+		return errors.New("return stauts is  false")
+	}
 }
