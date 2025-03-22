@@ -32,6 +32,7 @@ Doris:
 Kafka:
   Addr: 117.50.85.130:9092
   protocol: tcp
+  groupID: mygroup
 
 nacos:
   serverAddr: 117.50.85.130

@@ -3,12 +3,15 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"test_component/Internal/engine/task1"
+	"golang.org/x/sync/errgroup"
+	"test_component/Internal/engine/access"
 	"test_component/Internal/model"
 	"test_component/Internal/settings"
-	"time"
 )
 
+var chanCap = 100
+
+// Arg is the argument for Entrance
 type Arg struct {
 	ConfigMap string
 }
@@ -19,16 +22,24 @@ func Entrance(arg Arg) (err error) {
 	config, err := settings.InitConfig(arg.ConfigMap)
 	//初始化日志
 	//主流程
-	runTask(&config)
+	err = runTask(&config)
+	//fmt.Println("任务结束in Entrance")
+	if err != nil {
+		fmt.Println("任务结束 in Entrance")
+	}
+	return
 
-	return nil
 }
 
-func runTask(config *settings.Config) {
+func runTask(config *settings.Config) (err error) {
 	ctx := context.Background()
-	//wg := sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+	//通过errgroup优雅退出
+	eg, egCtx := errgroup.WithContext(ctx)
+	//wg := sync.WaitGroup{}
+	//ctx, cancel := context.WithCancel(ctx)
+
 	//初始化各种组件
 
 	//如redis
@@ -55,67 +66,57 @@ func runTask(config *settings.Config) {
 	} else {
 		fmt.Println("初始化doris成功")
 	}
-	//--------------------------------------------------------------
-	//example := model.ExampleTbl{
-	//	Timestamp: time.Now(),
-	//	Type:      1,
-	//	ErrorCode: 404,
-	//	ErrorMsg:  "Not Found",
-	//}
-	//example.InsertData(dorisDb)
-	//
-	//fmt.Println(" 插入完成")
-	//-------------------------------------------------------------
-	//用于测试doris的数据
-	//******************* 注意必须是这样的，应为可以有两个[]中阔号
-	/*exampleData := []model.ExampleTbl{
-		{
-			Timestamp: time.Now(),
-			Type:      1,
-			ErrorCode: 404,
-			ErrorMsg:  "Not Found",
-		},
-	}
 
-	jsonData, err := sonic.Marshal(exampleData)
-	fmt.Println(string(jsonData))
-	err = model.StreamInsertData(&jsonData, config.Doris, "example_tbl")
-	if err != nil {
-		fmt.Println("数据插入失败")
-	} else {
-		fmt.Println("数据插入成功")
-	}
-	fmt.Println("任务开始")*/
-	//------------------------------------------------------------------
 	//初始化kafka
-	procureTask1 := model.KafkaProcureIns("task1", config.Kafka)
-	defer procureTask1.Close()
-
-	consumeTask1 := model.KafkaConsumeIns("task1", config.Kafka)
-	defer consumeTask1.Close()
+	//procureTask1 := model.KafkaProcureIns("task1", config.Kafka)
+	//defer procureTask1.Close()
+	//
+	//consumeTask1 := model.KafkaConsumeIns("task1", config.Kafka)
+	//defer consumeTask1.Close()
 
 	//初始化nacos
-	namingClient, _ := model.InitNacos(config.Nacos)
-	defer namingClient.CloseClient()
-	// 初始化主任务成员
+	//namingClient, _ := model.InitNacos(config.Nacos)
+	//defer namingClient.CloseClient()
 
+	//初始化所有的通道
+	accessOutputCh := make(chan *model.TLV, chanCap)
+
+	// 初始化主任务成员
+	//  初始化接入
+	acc := access.New(egCtx, eg, accessOutputCh, config.Kafka, dorisDb, pg)
+	acc.Start()
 	//启动一些必要的协程
 
-	//wg.Add(1)
-	tak, _ := task1.New(ctx, redisDB, pg, dorisDb, procureTask1, consumeTask1, namingClient)
+	//初始化tag
+	//tag := discover.New(egCtx, eg, accessOutputCh, pg)
+	//tag.Start()
 
+	//初始化asset
+	//asset := asset.New(egCtx, eg, accessOutputCh)
+	//asset.Start()
+
+	//初始化运行统计模块
+	//stati := stat.New(egCtx, eg)
+	//stati.Start()
+
+	//wg.Add(1)
+	//tak, _ := task1.New(ctx, redisDB, pg, dorisDb, procureTask1, consumeTask1, namingClient)
+	//tak.Start()
 	//任务间的通信channel再次初始化
 
 	//任务需要的协程在次初始化
 
-	go func() error {
-		return tak.ProduceTestMessage(ctx)
-	}()
-
-	tak.Start()
+	//go func() error {
+	//	return tak.ProduceTestMessage(ctx)
+	//}()
+	//
+	//tak.Start()
 	//成员的运行方法
 
-	//wg.Done()
-	time.Sleep(20)
-	fmt.Println("任务结束")
+	err = eg.Wait()
+	if err != nil {
+		fmt.Println("任务结束 in runTask")
+	}
+	return err
+	//time.Sleep(20)
 }

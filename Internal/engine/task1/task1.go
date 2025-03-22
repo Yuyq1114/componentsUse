@@ -19,22 +19,30 @@ type Task1 struct {
 	DorisDb      *gorm.DB
 	Kw           *kafka.Writer
 	Kr           *kafka.Reader
+	km           *kafka.Message
 	NamingClient naming_client.INamingClient
 }
 
 func New(ctx context.Context, rdb *redis.Client, pg *gorm.DB, dorisDb *gorm.DB, kafkawrite *kafka.Writer, kafkaReader *kafka.Reader, naminfClient naming_client.INamingClient) (*Task1, error) {
 	task1 := &Task1{
-		Ctx:          ctx,
-		TestString:   "hello，this is the task1 start",
-		Rdb:          rdb,
-		Pg:           pg,
-		DorisDb:      dorisDb,
-		Kw:           kafkawrite,
-		Kr:           kafkaReader,
+		Ctx:        ctx,
+		TestString: "hello，this is the task1 start",
+		Rdb:        rdb,
+		Pg:         pg,
+		DorisDb:    dorisDb,
+		Kw:         kafkawrite,
+		Kr:         kafkaReader,
+		//km:           kafkaMessage,
 		NamingClient: naminfClient,
 	}
 	return task1, nil
 }
+
+//func (task1 *Task1) Run() error {
+//	go task1.ProduceTestMessage(task1.Ctx)
+//	go task1.Start(c)
+//	return nil
+//}
 
 // ProduceTestMessage 生产测试消息
 func (task1 *Task1) ProduceTestMessage(ctx context.Context) error {
@@ -60,7 +68,7 @@ func (task1 *Task1) ProduceTestMessage(ctx context.Context) error {
 
 }
 
-func (task1 *Task1) Start() {
+func (task1 *Task1) Start(ch chan kafka.Message) {
 	//task1.KafkaConn.WriteMessages("hello")
 	fmt.Println("mission start")
 	for {

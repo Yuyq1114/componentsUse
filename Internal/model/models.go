@@ -156,9 +156,14 @@ func InitNacos(config settings.NacosConfig) (namingClient naming_client.INamingC
 			ClientConfig:  &ClientConfig,
 		},
 	)
+	if err != nil {
+		//logger.Error(err)
+		fmt.Println(err)
+		return nil, err
+	}
 	fmt.Println("初始化nacos成功")
 	// 创建 Nacos 服务发现客户端
-	return
+	return namingClient, nil
 }
 
 //func InitKafka(config settings.KafkaConfig) (conn *kafka.Conn, error error) {

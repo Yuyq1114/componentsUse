@@ -11,7 +11,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"test_component/Internal/settings"
 	"time"
 )
 
@@ -69,13 +68,16 @@ func (u *ExampleTbl) InsertData(db *gorm.DB) error {
 	return db.Create(u).Error
 }
 
-func StreamInsertData(exampleData *[]byte, dorisConfig settings.DorisConfig, table string) error {
+func StreamInsertData(exampleData *[]byte, table string) error {
 
 	// 将结构体数据序列化为 JSON
-
+	//dataSource: "root:mypassword@tcp(117.50.85.130:9030)/mydb?charset=utf8mb4&parseTime=True&loc=Local"
+	//FEIP: "117.50.85.130"
+	//FEPORT: "8040"
+	//FEDB: "mydb"
 	//jsonData1 := bytes.NewReader(jsonData)
 	// 构建 HTTP 请求，注意端口
-	url := fmt.Sprintf("http://%s:%s/api/%s/%s/_stream_load", dorisConfig.FEIP, dorisConfig.FEPORT, dorisConfig.FEDB, table)
+	url := fmt.Sprintf("http://117.50.85.130:8040/api/mydb/%s/_stream_load", table)
 	//url := "http://117.50.85.130:8040/api/mydb/example_tbl/_stream_load"
 	dataOut := bytes.NewReader(*exampleData)
 	req, err := http.NewRequest("PUT", url, dataOut)
@@ -91,7 +93,7 @@ func StreamInsertData(exampleData *[]byte, dorisConfig settings.DorisConfig, tab
 	var u1 = uuid.Must(uuid.NewV4())
 	req.Header.Add("label", u1.String())
 	req.Header.Add("format", "json")
-	req.Header.Add("strip_outer_array", "TRUE") // 可选，设置请求超时（毫秒）
+	req.Header.Add("strip_outer_array", "True") // DorisDB可能期望的是一个JSON数组
 
 	// 发送请求
 	client := &http.Client{}
@@ -116,3 +118,37 @@ func StreamInsertData(exampleData *[]byte, dorisConfig settings.DorisConfig, tab
 		return errors.New("return stauts is  false")
 	}
 }
+
+//位于entrance的runTask中的测试doris的数据
+//--------------------------------------------------------------
+//example := model.ExampleTbl{
+//	Timestamp: time.Now(),
+//	Type:      1,
+//	ErrorCode: 404,
+//	ErrorMsg:  "Not Found",
+//}
+//example.InsertData(dorisDb)
+//
+//fmt.Println(" 插入完成")
+//-------------------------------------------------------------
+//用于测试doris的数据
+//******************* 注意必须是这样的，应为可以有两个[]中阔号
+/*exampleData := []model.ExampleTbl{
+	{
+		Timestamp: time.Now(),
+		Type:      1,
+		ErrorCode: 404,
+		ErrorMsg:  "Not Found",
+	},
+}
+
+jsonData, err := sonic.Marshal(exampleData)
+fmt.Println(string(jsonData))
+err = model.StreamInsertData(&jsonData, config.Doris, "example_tbl")
+if err != nil {
+	fmt.Println("数据插入失败")
+} else {
+	fmt.Println("数据插入成功")
+}
+fmt.Println("任务开始")*/
+//------------------------------------------------------------------

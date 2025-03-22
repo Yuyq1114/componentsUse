@@ -22,6 +22,21 @@ type Order struct {
 	CreatedAt time.Time
 }
 
+type HttpsData struct {
+	URL        string            `json:"url"`
+	Method     string            `json:"method"`
+	StatusCode int               `json:"status_code,omitempty"` // 响应中才可能有，使用 `omitempty` 处理可选字段
+	Headers    map[string]string `json:"headers"`
+	Content    string            `json:"content"`
+}
+
+// 定义 TLV 结构体
+type TLV struct {
+	LogId     int64     `json:"log_id"`
+	Type      string    `json:"type"`
+	HttpsData HttpsData `json:"data"`
+}
+
 // TableName 使用grom创建表时会自动的创建某个表的名字，这个可以自定义表名
 func (u *User) TableName() string {
 	return "users"

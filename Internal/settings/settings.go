@@ -28,6 +28,7 @@ type DorisConfig struct {
 type KafkaConfig struct {
 	Protocol string `mapstructure:"protocol"`
 	Addr     string `mapstructure:"Addr"`
+	GroupId  string `mapstructure:"groupID"`
 }
 type NacosConfig struct {
 	ServerAddr  string `mapstructure:"serverAddr"`
