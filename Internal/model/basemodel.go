@@ -35,6 +35,19 @@ type TLV struct {
 	LogId     int64     `json:"log_id"`
 	Type      string    `json:"type"`
 	HttpsData HttpsData `json:"data"`
+	MergeId   int64     `json:"merge_id"`
+}
+
+// 定义pg中存放的合并http相关信息
+type MergeHttps struct {
+	MergeId    int64     `gorm:"primaryKey"` // 移除 autoIncrement
+	Hosts      string    `gorm:"type:varchar(255);not null"`
+	CreateTime time.Time `gorm:"type:timestamp;default:CURRENT_TIMESTAMP;not null"`
+	UpdateTime time.Time `gorm:"type:timestamp;default:CURRENT_TIMESTAMP"`
+}
+
+func (m *MergeHttps) TableName() string {
+	return "merge_https" // GORM 使用的表名
 }
 
 // TableName 使用grom创建表时会自动的创建某个表的名字，这个可以自定义表名

@@ -5,6 +5,7 @@ go 1.23.3
 require (
 	github.com/bytedance/sonic v1.12.7
 	github.com/confluentinc/confluent-kafka-go/v2 v2.8.0
+	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8
 	github.com/nacos-group/nacos-sdk-go/v2 v2.2.7
 	github.com/panjf2000/ants/v2 v2.11.2
 	github.com/redis/go-redis/v9 v9.7.0

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"golang.org/x/sync/errgroup"
 	"test_component/Internal/engine/access"
+	"test_component/Internal/engine/asset"
 	"test_component/Internal/model"
 	"test_component/Internal/settings"
 )
@@ -88,12 +89,12 @@ func runTask(config *settings.Config) (err error) {
 	//启动一些必要的协程
 
 	//初始化tag
-	//tag := discover.New(egCtx, eg, accessOutputCh, pg)
+	//tag := discover.New(egCtx, eg, accessOutputCh, pg, redisDB)
 	//tag.Start()
 
 	//初始化asset
-	//asset := asset.New(egCtx, eg, accessOutputCh)
-	//asset.Start()
+	asset := asset.New(egCtx, eg, accessOutputCh, pg, redisDB, dorisDb)
+	asset.Start()
 
 	//初始化运行统计模块
 	//stati := stat.New(egCtx, eg)

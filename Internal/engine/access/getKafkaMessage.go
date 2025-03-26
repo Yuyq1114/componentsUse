@@ -31,7 +31,7 @@ var (
 	bufferMutex  sync.Mutex  // 互斥锁，防止并发问题
 	flushTicker  *time.Ticker
 	flushTimeout = 3 * time.Minute // 3分钟超时
-	maxBufferLen = 5               // 每50条数据批量写入一次
+	maxBufferLen = 1               //由于目前不能解决数据不一致问题，暂且改成1条
 )
 
 const (
