@@ -16,8 +16,12 @@ import (
 )
 
 var (
-	pollAssetSize = 5
-	cacheCap      = 10
+	//并发的时候发现入库会有冲突，需要解决，加锁还是怎么处理
+	//方案1是数据库添加唯一索引 ALTER TABLE merge_https ADD CONSTRAINT unique_hosts UNIQUE (hosts);
+	//方案2是插入时使用UPSERT 语法，ON CONFLICT (hosts) DO NOTHING;
+	//方案3 使用redis分布式锁，前两个方案更好，但是考虑到本项目需要用作学习，因此添加技术栈增加难度
+	pollAssetSize = 10
+	cacheCap      = 5
 )
 
 type Asset struct {
@@ -54,6 +58,20 @@ func (asset *Asset) Start() {
 	})
 }
 
+// acquireLock 获取分布式锁
+func (asset *Asset) acquireLock(key string, expiration time.Duration) bool {
+	success, err := asset.Redis.SetNX(asset.Ctx, key, "1", expiration).Result()
+	if err != nil {
+		fmt.Println("获取锁失败:", err)
+		return false
+	}
+	return success
+}
+
+// releaseLock 释放分布式锁
+func (asset *Asset) releaseLock(key string) {
+	asset.Redis.Del(asset.Ctx, key)
+}
 func (asset *Asset) GetMergeAsset() (err error) {
 	//创建协程池
 	funcPool, err := ants.NewPoolWithFunc(pollAssetSize, func(i interface{}) {
@@ -93,7 +111,12 @@ func (asset *Asset) handlerAssetMerge(msg *model.TLV) {
 		return
 	}
 	//parse.Host
-
+	lockKey := fmt.Sprintf("lock:merge:%s", parse.Host) // Redis 锁 Key
+	if !asset.acquireLock(lockKey, 5*time.Second) {     // 5s 过期时间
+		fmt.Println("⚠️ 另一个 Goroutine 正在处理:", parse.Host)
+		return
+	}
+	defer asset.releaseLock(lockKey) // 确保释放锁
 	//
 	var mergeData model.MergeHttps
 	//如果 已有该host，新增一个，如果没有，创建一个

@@ -101,7 +101,7 @@ func runTask(config *settings.Config) (err error) {
 	//stati.Start()
 
 	//wg.Add(1)
-	//tak, _ := task1.New(ctx, redisDB, pg, dorisDb, procureTask1, consumeTask1, namingClient)
+	//tak, _ := task1.New(egCtx, eg, redisDB, pg, dorisDb)
 	//tak.Start()
 	//任务间的通信channel再次初始化
 
